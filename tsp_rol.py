@@ -6,6 +6,9 @@ import random as rd
 import os
 import time
 
+from scipy.spatial.distance import pdist
+from scipy.spatial.distance import squareform
+
 class TSPR():
 	'''
 		Traveling Salesman Problem,
@@ -17,11 +20,11 @@ class TSPR():
 	def __init__(self, path, seed=0):		
 		if seed: np.random.seed(seed)
 		# Graph
-		self.Graph = self._create_model(path)
+		self.Graph = self.create_model(path)
 		# Cities
 		self.num_cities = self.Graph.number_of_nodes()
 		self.cities = list(range(self.num_cities))
-		# 
+		
 		self.tour = None
 		self.tour_cost = 0
 		self.starting_node = np.random.choice(self.cities)
@@ -31,11 +34,19 @@ class TSPR():
 		Private Methods
 	'''
 
-	def _create_model(self, path):
+	def create_model(self, path):
 		"""
 			Create Graph representation and MDP variables with number of states designated
 		"""
-		# 'brazil58.tsp'
+		data_format = path.split('/')[1]
+		
+		if data_format == 'edge_explicity':
+			return self.read_edge_explicity_data(path)
+
+		elif data_format == 'node_coord':
+			return self.read_node_coordinate_data(path)
+
+	def read_edge_explicity_data(self, path):
 		with open(path) as reader:
 			# # Complete graph
 			G = nx.complete_graph(int(reader.readline()))
@@ -47,7 +58,25 @@ class TSPR():
 					G.edges[j, i]['w'] = w
 		return G
 
-	def _create_adj_mat(self, tour):
+	def read_node_coordinate_data(self, path):
+		with open(path) as reader:
+			G = nx.complete_graph(int(reader.readline()))
+			X = []
+			Y = []
+			for _ in range(G.number_of_nodes()):
+				x, y = reader.readline().split()
+				X.append(int(x))
+				Y.append(int(y))
+			coordinates = np.array(list(zip(X, Y)))
+			dist_matrix = squareform(pdist(coordinates))
+			for i in range(G.number_of_nodes()):
+				for j in range(G.number_of_nodes()):
+					if i != j:
+						G.edges[i, j]['w'] = dist_matrix[i, j]
+						G.edges[j, i]['w'] = dist_matrix[j, i]
+		return G
+
+	def create_adj_mat(self, tour):
 		# Adjacency matrix
 		adj_mat = np.array(nx.adjacency_matrix(self.Graph, weight='w').todense(), dtype=float)
 		# set main diagonal to inf
@@ -59,20 +88,20 @@ class TSPR():
 
 		return adj_mat
 
-	def _calc_cost(self, tour):
+	def calc_cost(self, tour):
 		cost = 0
 		for i in range(self.num_cities):
 			cost += self.Graph[tour[i]][tour[i+1]]['w']
 		return cost
 
-	def _nearest_neighbor(self, tour):
+	def nearest_neighbor(self, tour):
 		'''
 			tour: is partial tour of solution, 
 			example, 5 cities, tour is list of nodes [0, 1, 2], index 0 is starting city,
 			the return is a complete tour, in the form [0, 1, 2, 4, 3, 0] and cost of tour 
 		'''
 		# Create adjacency matrix
-		adj_mat = self._create_adj_mat(tour)
+		adj_mat = self.create_adj_mat(tour)
 		# Complete tour 
 		for _ in range(self.num_cities - len(tour)):
 			min_index = np.argmin(adj_mat[tour[-1]])
@@ -82,7 +111,7 @@ class TSPR():
 			tour.append(min_index)
 		tour.append(self.starting_node)
 		# Calculate cost
-		cost = self._calc_cost(tour)
+		cost = self.calc_cost(tour)
 		return tour, cost
 
 	'''
@@ -90,7 +119,7 @@ class TSPR():
 	'''
 
 	def run(self):
-		print(np.array(nx.adjacency_matrix(self.Graph, weight='w').todense(), dtype=float))
+		# print(np.array(nx.adjacency_matrix(self.Graph, weight='w').todense(), dtype=float))
 		self.tour = [self.starting_node]
 		global_cost = []
 		
@@ -103,7 +132,7 @@ class TSPR():
 			for j in set(self.Graph[self.tour[-1]]) - set(self.tour):
 				curr_tour.append(j)
 
-				_, rol_cost = self._nearest_neighbor(curr_tour.copy())
+				_, rol_cost = self.nearest_neighbor(curr_tour.copy())
 				# global_cost.append(rol_cost)
 				if rol_cost < best_rol_cost:
 					best_rol_cost = rol_cost
@@ -115,8 +144,8 @@ class TSPR():
 		
 		# print('Custos globais:', global_cost)
 		print('Tour rol sol:', self.tour)
-		print('Cost rol sol:', self._calc_cost(self.tour))
-		return self.tour, self._calc_cost(self.tour)
+		print('Cost rol sol:', self.calc_cost(self.tour))
+		return self.tour, self.calc_cost(self.tour)
 
 	def draw_graph(self):
 		pos = nx.spring_layout(self.Graph)
@@ -127,6 +156,10 @@ class TSPR():
 
 #%%
 if __name__ == "__main__":
-	path = 'data/brazil58.tsp'
+	path = 'data/edge_explicity/brazil58.tsp'
+	# path = 'data/edge_explicity/bayg29.tsp'
+	# path = 'data/node_coord/att48.tsp'
+	# path = 'data/node_coord/bier127.tsp'
 	t = TSPR(path, seed=2)
 	t.run()
+# %%
