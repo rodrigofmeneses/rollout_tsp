@@ -43,7 +43,7 @@ class TSPR():
 		if data_format == 'edge_explicity':
 			return self.read_edge_explicity_data(path)
 
-		elif data_format == 'node_coord':
+		elif data_format == 'node_coordinate':
 			return self.read_node_coordinate_data(path)
 
 	def read_edge_explicity_data(self, path):
@@ -119,7 +119,6 @@ class TSPR():
 	'''
 
 	def run(self):
-		# print(np.array(nx.adjacency_matrix(self.Graph, weight='w').todense(), dtype=float))
 		self.tour = [self.starting_node]
 		global_cost = []
 		
@@ -143,8 +142,8 @@ class TSPR():
 		self.tour.append(self.starting_node)
 		
 		# print('Custos globais:', global_cost)
-		print('Tour rol sol:', self.tour)
-		print('Cost rol sol:', self.calc_cost(self.tour))
+		# print('Tour rol sol:', self.tour)
+		# print('Cost rol sol:', self.calc_cost(self.tour))
 		return self.tour, self.calc_cost(self.tour)
 
 	def draw_graph(self):
@@ -156,10 +155,43 @@ class TSPR():
 
 #%%
 if __name__ == "__main__":
-	path = 'data/edge_explicity/brazil58.tsp'
-	# path = 'data/edge_explicity/bayg29.tsp'
-	# path = 'data/node_coord/att48.tsp'
-	# path = 'data/node_coord/bier127.tsp'
-	t = TSPR(path, seed=2)
-	t.run()
+	edge_explicity_data = os.listdir('data/edge_explicity')
+	node_coordinate_date = os.listdir('data/node_coordinate')
+
+	# Experiments
+	path = 'data/edge_explicity/'
+	results = dict()
+	n_episode = 5
+	for sample in edge_explicity_data:
+		tsp_cost_mean = 0
+		tsp_time_mean = 0
+		nn_cost_mean = 0
+		nn_time_mean = 0
+		for episode in range(n_episode):
+			exp = TSPR(path + sample)
+
+			init_time = time.time()
+			_, cost = exp.run()
+			tsp_time_mean += time.time() - init_time
+			tsp_cost_mean += cost
+
+			init_time = time.time()
+			_, cost = exp.nearest_neighbor([exp.starting_node])
+			nn_time_mean += time.time() - init_time
+			nn_cost_mean += cost
+
+		print(f'\nTSP sample: {sample}, in {n_episode} episodes')
+		print('\nRollout Algorithm')
+		print(f'Time mean: {tsp_time_mean / n_episode}')
+		print(f'Cost mean: {tsp_cost_mean / n_episode}')
+		print('\nNearest Neighbor Algorithm')
+		print(f'Time mean: {nn_time_mean / n_episode}')
+		print(f'Cost mean: {nn_cost_mean / n_episode}')
+
+
+
+# %%
+tour, cost = t.nearest_neighbor([t.starting_node])
+print('Tour NN sol:', tour)
+print('Tour NN cost:', cost)
 # %%
