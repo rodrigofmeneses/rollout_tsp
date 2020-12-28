@@ -7,6 +7,7 @@ import os
 import time
 from scipy.spatial.distance import pdist
 from scipy.spatial.distance import squareform
+from numba import jit
 
 class TSPR():
 	'''
@@ -131,6 +132,7 @@ class TSPR():
 			cost += self.Graph[tour[i]][tour[i+1]]['w']
 		return cost
 
+	# @jit(nopython=True)
 	def nearest_neighbor(self, tour):
 		'''
 			Base heuristic to rollout algorithm, the main difference of traditional 
@@ -175,10 +177,7 @@ class TSPR():
 				curr_tour.pop()
 			self.tour.append(best_node)
 		self.tour.append(self.starting_node)
-		
-		# print('Custos globais:', global_cost)
-		# print('Tour rol sol:', self.tour)
-		# print('Cost rol sol:', self.calc_cost(self.tour))
+
 		return self.tour, self.calc_cost(self.tour)
 
 	def draw_graph(self):
@@ -213,7 +212,7 @@ if __name__ == "__main__":
 	results = open(f'experiments/results{time.time_ns()}.txt', 'w')
 	results.write('instance_name,rol_cost,rol_time,nn_cost,nn_time\n')
 	n_episodes = 10
-	# test_inst = ['gr17.tsp']
+	# test_inst = ['brazil58.tsp']
 	for folder in folders:
 		for instance in instances[folder]:
 			# if instance not in test_inst:

@@ -1,0 +1,2 @@
+instance_name,rol_cost,rol_time,nn_cost,nn_time
+brazil58.tsp

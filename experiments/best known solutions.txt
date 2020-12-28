@@ -1,16 +1,13 @@
-best known solutions
+best known solutions, cost
 
-bayg29.tsp : 1610
-bays29.tsp : 2020
-brazil58.tsp : 25395
-
-att48.tsp : 10628
-bier127.tsp : 118282
-eil101.tsp : 426
-kroA100.tsp : 21282
-tsp225.tsp : 3919
-
-gr17.tsp : 2085 ---- problema aqui
-kroD100 : 21294
-pr76.tsp : 108159
-rat99.tsp : 1211
+bayg29.tsp, 1610
+bays29.tsp, 2020
+brazil58.tsp, 25395
+att48.tsp, 10628
+bier127.tsp, 118282
+eil101.tsp, 426
+kroA100.tsp, 21282
+tsp225.tsp, 3919
+kroD100, 21294
+pr76.tsp, 108159
+rat99.tsp, 1211
