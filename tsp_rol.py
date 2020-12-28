@@ -40,6 +40,8 @@ class TSPR():
 
 		elif data_format == 'node_coordinate':
 			return self.read_node_coordinate_instances(path)
+		else:
+			raise Exception
 
 	def read_edge_explicity_instances(self, path):
 		'''
@@ -71,7 +73,7 @@ class TSPR():
 			Read node coordinate instances
 			path: path of instance
 			ex:
-			
+
 			5     <- number of nodes
 			1 1   <- node 0, coordinate (x, y) = (1, 1) 
 			2 3   <- node 0, coordinate (x, y) = (2, 3) 	
@@ -210,10 +212,12 @@ if __name__ == "__main__":
 	
 	results = open(f'experiments/results{time.time_ns()}.txt', 'w')
 	results.write('instance_name,rol_cost,rol_time,nn_cost,nn_time\n')
-	n_episodes = 3
-	# results = []
+	n_episodes = 10
+	# test_inst = ['gr17.tsp']
 	for folder in folders:
 		for instance in instances[folder]:
+			# if instance not in test_inst:
+			# 	continue
 			file_path = f'instances/{folder}/{instance}'
 			# result = [instance]
 			results.write(instance)
