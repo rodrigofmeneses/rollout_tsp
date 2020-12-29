@@ -157,7 +157,6 @@ class TSPR():
 
 	def run(self):
 		self.tour = [self.starting_node]
-		global_cost = []
 		
 		for i in range(self.num_cities - 1):
 			curr_tour = self.tour.copy()
@@ -169,7 +168,6 @@ class TSPR():
 				curr_tour.append(j)
 
 				_, rol_cost = self.nearest_neighbor(curr_tour.copy())
-				# global_cost.append(rol_cost)
 				if rol_cost < best_rol_cost:
 					best_rol_cost = rol_cost
 					best_node = j
