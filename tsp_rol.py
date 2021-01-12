@@ -1,6 +1,6 @@
 #%%
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import networkx as nx
 import random as rd
 import os
@@ -209,12 +209,12 @@ if __name__ == "__main__":
 	
 	results = open(f'experiments/results{time.time_ns()}.txt', 'w')
 	results.write('instance_name,rol_cost,rol_time,nn_cost,nn_time\n')
-	n_episodes = 10
-	# test_inst = ['brazil58.tsp']
+	n_episodes = 1
+	test_inst = ['brazil58.tsp']
 	for folder in folders:
 		for instance in instances[folder]:
-			# if instance not in test_inst:
-			# 	continue
+			if instance not in test_inst:
+				continue
 			file_path = f'instances/{folder}/{instance}'
 			# result = [instance]
 			results.write(instance)
