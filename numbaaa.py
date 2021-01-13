@@ -116,6 +116,11 @@ def calculate_cost(tour, adj_mat):
         cost += adj_mat[tour[i]][tour[i+1]]
     return cost
 
+# def nn_core(tour):
+
+#     nn_tour = nearest_neighbor()
+#     nn_cost = 
+#     return nn_tour, nn_cost
 
 @jit(nopython=True)
 def nearest_neighbor(tour, num_cities, adj_mat):
@@ -137,7 +142,10 @@ def nearest_neighbor(tour, num_cities, adj_mat):
     # Return complete tour
     return tour
 
-def rollout_algorithm(G, num_cities, starting_node, adj_mat):
+def rollout_algorithm(G, adj_mat, num_cities, starting_node):
+
+    
+    # Starting tour
     tour = [starting_node]
 
     for _ in range(num_cities - 1):
@@ -163,50 +171,57 @@ def rollout_algorithm(G, num_cities, starting_node, adj_mat):
     return tour, calculate_cost(tour, adj_mat.copy())
 
 def experiments_with(file_path):
-    
+    # Create Model (Graph)
     G = create_model(file_path)
-    adj_mat = np.array(nx.adjacency_matrix(G, weight='w').todense(), dtype=float)
-    num_cities = G.number_of_nodes()
 
+    # Create Adjacency Matrix
+    adj_mat = np.array(nx.adjacency_matrix(G, weight='w').todense(), dtype=float)
+    # number of cities
+    num_cities = G.number_of_nodes()
+    # random starting node
     starting_node = int(np.random.choice(range(num_cities)))
-    
+
+    # execute rollout algorithm and calculate time
     start = time.time()
-    rollout_tour, rollout_cost = rollout_algorithm(G, num_cities, starting_node, adj_mat)
+    rollout_tour, rollout_cost = rollout_algorithm(G, adj_mat, num_cities, starting_node)
     rollout_time = time.time() - start
     
+    # execute nearest neighbor algorithm and calculate time
     start = time.time()
     current_adj_mat = update_adj_mat([starting_node], num_cities, adj_mat.copy())
     nn_tour = nearest_neighbor([starting_node], num_cities, current_adj_mat.copy())
     nn_cost = calculate_cost(nn_tour, adj_mat.copy())
     nn_time = time.time() - start
-    #print('Custo do rollout tour: ', rollout_cost)
-    #print('Tempo do rollout algorithm: ', rollout_time)
-    #print('Custo do nn tour: ', calculate_cost(nn_tour))
-    #print('Tempo do nn algorithm: ', nn_time)
+
     return rollout_cost, rollout_time, nn_cost, nn_time
 
 #%%
 # Read Instances
-folders = os.listdir('instances')
+folders = os.listdir('instances')[:1]
 # Create Results file
 results = open(f'experiments/results{time.strftime("%d%b%Y_%H_%M_%S", time.gmtime())}.txt', 'w')
 # Write header
 results.write('instance_name,rol_cost,rol_time,nn_cost,nn_time\n')
 
+
 # Start tests
-n_episodes = 1
-#test_inst = ['brazil58.tsp']
-test_inst = ['bier127.tsp']
+n_episodes = 10
+
 for folder in folders:
     for instance in os.listdir(f'instances/{folder}'):
-        if instance not in test_inst:
-            continue
         file_path = f'instances/{folder}/{instance}'
+        # Write instance name
         results.write(instance)
+        # Initialize mean array with 0
         mean_result = np.zeros(4)
+
+        # Run experiments n_episodes times
         for e in range(n_episodes):
             mean_result += np.array(experiments_with(file_path))
+        # Calculate mean 
         mean_result /= n_episodes
+        # Write instance results
         results.write(f',{mean_result[0]},{mean_result[1]},{mean_result[2]},{mean_result[3]}\n')
+# Close file
 results.close()
 # %%

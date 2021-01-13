@@ -1,2 +1,0 @@
-instance_name,rol_cost,rol_time,nn_cost,nn_time
-bier127.tsp,127700.75682711271,8.462156295776367,135751.77804825202,0.0
