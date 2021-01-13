@@ -158,7 +158,7 @@ class TSPR():
 	def run(self):
 		self.tour = [self.starting_node]
 		
-		for i in range(self.num_cities - 1):
+		for _ in range(self.num_cities - 1):
 			curr_tour = self.tour.copy()
 			best_rol_cost = np.inf
 			best_node = None
@@ -198,6 +198,8 @@ def experiments_with(file_path):
 	_, nn_cost = exp.nearest_neighbor([exp.starting_node])
 	nn_time = time.time() - init_time
 
+	print(_)
+
 	return rol_cost, rol_time, nn_cost, nn_time
 
 if __name__ == "__main__":
@@ -210,7 +212,8 @@ if __name__ == "__main__":
 	results = open(f'experiments/results{time.time_ns()}.txt', 'w')
 	results.write('instance_name,rol_cost,rol_time,nn_cost,nn_time\n')
 	n_episodes = 1
-	test_inst = ['brazil58.tsp']
+	#test_inst = ['brazil58.tsp']
+	test_inst = ['bier127.tsp']
 	for folder in folders:
 		for instance in instances[folder]:
 			if instance not in test_inst:

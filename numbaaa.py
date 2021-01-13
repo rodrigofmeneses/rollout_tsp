@@ -1,3 +1,4 @@
+#%%
 import numpy as np
 import networkx as nx
 import time
@@ -6,7 +7,7 @@ from numba import jit
 from numba.typed import List
 from scipy.spatial.distance import pdist
 from scipy.spatial.distance import squareform
-
+#%%
 
 def read_edge_explicity_instances(path):
     '''
@@ -139,32 +140,18 @@ def nearest_neighbor(tour, num_cities, adj_mat):
 def rollout_algorithm(G, num_cities, starting_node, adj_mat):
     tour = [starting_node]
 
-    for i in range(num_cities - 1):
-        #current_tour = tour.copy()
-
-        # Exigência do numba - tranformar em funcao
-        current_tour = List()
-        [current_tour.append(x) for x in tour]
-
+    for _ in range(num_cities - 1):
+        current_tour = tour.copy()
         best_rollout_cost = np.inf
         best_next_city = None
         
         for j in set(G[tour[-1]]) - set(tour):
             current_tour.append(j)
 
-            # Exigencia numba
-            tour_numba = List()
-            [tour_numba.append(x) for x in tour]
-
-            current_adj_mat = update_adj_mat(tour_numba, num_cities, adj_mat.copy())
-            
+            current_adj_mat = update_adj_mat(current_tour.copy(), num_cities, adj_mat.copy())
             nn_path = nearest_neighbor(current_tour.copy(), num_cities, current_adj_mat.copy())
             
-            # Exigência do numba
-            nn_path_numba = List()
-            [nn_path_numba.append(x) for x in nn_path]
-            
-            rollout_cost = calculate_cost(nn_path_numba, adj_mat.copy())
+            rollout_cost = calculate_cost(nn_path, adj_mat.copy())
             if rollout_cost < best_rollout_cost:
                 best_rollout_cost = rollout_cost
                 best_next_city = j
@@ -172,12 +159,8 @@ def rollout_algorithm(G, num_cities, starting_node, adj_mat):
             current_tour.pop()
         tour.append(best_next_city)
     tour.append(starting_node)
-    
-    # Exigência numba
-    tour_numba = List()
-    [tour_numba.append(x) for x in tour]
 
-    return tour, calculate_cost(tour_numba, adj_mat.copy())
+    return tour, calculate_cost(tour, adj_mat.copy())
 
 def experiments_with(file_path):
     
@@ -186,24 +169,15 @@ def experiments_with(file_path):
     num_cities = G.number_of_nodes()
 
     starting_node = int(np.random.choice(range(num_cities)))
-
+    
     start = time.time()
     rollout_tour, rollout_cost = rollout_algorithm(G, num_cities, starting_node, adj_mat)
     rollout_time = time.time() - start
     
     start = time.time()
-
-    # Exigencia numba
-    starting_tour = List()
-    starting_tour.append(starting_node)
-
-    nn_tour = nearest_neighbor(starting_tour, num_cities, adj_mat.copy())
-    
-    # Exigencia numba
-    nn_tour_numba = List()
-    [nn_tour_numba.append(x) for x in nn_tour]
-
-    nn_cost = calculate_cost(nn_tour_numba, adj_mat.copy())
+    current_adj_mat = update_adj_mat([starting_node], num_cities, adj_mat.copy())
+    nn_tour = nearest_neighbor([starting_node], num_cities, current_adj_mat.copy())
+    nn_cost = calculate_cost(nn_tour, adj_mat.copy())
     nn_time = time.time() - start
     #print('Custo do rollout tour: ', rollout_cost)
     #print('Tempo do rollout algorithm: ', rollout_time)
@@ -212,5 +186,27 @@ def experiments_with(file_path):
     return rollout_cost, rollout_time, nn_cost, nn_time
 
 #%%
-print(experiments_with('instances/edge_explicity/brazil58.tsp'))
-#print(experiments_with('instances/node_coordinate/bier127.tsp'))
+# Read Instances
+folders = os.listdir('instances')
+# Create Results file
+results = open(f'experiments/results{time.strftime("%d%b%Y_%H_%M_%S", time.gmtime())}.txt', 'w')
+# Write header
+results.write('instance_name,rol_cost,rol_time,nn_cost,nn_time\n')
+
+# Start tests
+n_episodes = 1
+#test_inst = ['brazil58.tsp']
+test_inst = ['bier127.tsp']
+for folder in folders:
+    for instance in os.listdir(f'instances/{folder}'):
+        if instance not in test_inst:
+            continue
+        file_path = f'instances/{folder}/{instance}'
+        results.write(instance)
+        mean_result = np.zeros(4)
+        for e in range(n_episodes):
+            mean_result += np.array(experiments_with(file_path))
+        mean_result /= n_episodes
+        results.write(f',{mean_result[0]},{mean_result[1]},{mean_result[2]},{mean_result[3]}\n')
+results.close()
+# %%

@@ -1,0 +1,2 @@
+instance_name,rol_cost,rol_time,nn_cost,nn_time
+brazil58.tsp,28131.0,4.238574504852295,30774.0,0.0
