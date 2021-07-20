@@ -1,8 +1,10 @@
 #%%
 import os
+import time
 import numpy as np
 import tsplib95
-# from numba import jit
+from numba import jit
+from numba.typed import List
 #%%
 
 def get_distance_matrix(problem):
@@ -18,7 +20,7 @@ def get_distance_matrix(problem):
     
     return distance_matrix
 
-# @jit(nopython=True)
+@jit(nopython=True)
 def calculate_tour_cost(tour, distance_matrix):
     '''
         Calc cost of tour.
@@ -31,7 +33,7 @@ def calculate_tour_cost(tour, distance_matrix):
         cost += distance_matrix[tour[i]][tour[i+1]]
     return cost
 
-# @jit(nopython=True)
+@jit(nopython=True)
 def nearest_neighbor(tour, distance_matrix):
     '''
         Core of nearest neighbor, numba require only loops and numpy operations.
@@ -67,7 +69,7 @@ def rollout_algorithm(problem, starting_node=0):
     # Number of cities
     num_cities = problem.dimension
     # Initial tour
-    tour = [starting_node]
+    tour = List([starting_node])
 
     # Rollout Algorithm run for num_cities - 1 steps
     for _ in range(num_cities - 1):
@@ -85,7 +87,7 @@ def rollout_algorithm(problem, starting_node=0):
 
             # Run Base Policy, Nearest Neighbor
             nn_tour = nearest_neighbor(current_tour.copy(), distance_matrix.copy())
-            rollout_cost = calculate_tour_cost(nn_tour, distance_matrix)
+            rollout_cost = calculate_tour_cost(nn_tour, List(distance_matrix))
             # Tests to optimize costs.
             if rollout_cost < best_rollout_cost:
                 best_rollout_cost = rollout_cost
@@ -102,37 +104,39 @@ def rollout_algorithm(problem, starting_node=0):
 
 def experiments_with(problem):
 
+    distance_matrix = get_distance_matrix(problem)
+
     # Core of experiments
     # execute rollout algorithm and calculate time
     start = time.time()
     rollout_tour = rollout_algorithm(problem)
     rollout_time = time.time() - start
-    rollout_cost = calculate_tour_cost(rollout_tour)
+    rollout_cost = calculate_tour_cost(rollout_tour, distance_matrix)
     
     # execute nearest neighbor algorithm and calculate time
     start = time.time()
     nn_tour = nearest_neighbor([0], distance_matrix.copy())
     nn_time = time.time() - start
-    nn_cost = calculate_tour_cost(nn_tour)
+    nn_cost = calculate_tour_cost(nn_tour, distance_matrix)
 
     return rollout_cost, rollout_time, nn_cost, nn_time
 
+
+#%%
+problem = tsplib95.load(f'../../instances/tsp_data/gr202.tsp')
+
+experiments_with(problem)
+
 #%%
 # for folder in folders:
-for instance in os.listdir(f'../instances/tsp_data')[:4]:
+for instance in os.listdir(f'../../instances/tsp_data')[:100]:
     if instance[-3:] != 'tsp': continue
 
-    file_path = f'../instances/tsp_data/{instance}'
-    
-    # print(instance)
+    file_path = f'../../instances/tsp_data/{instance}'
+
     problem = tsplib95.load(file_path)
+    if problem.dimension > 200: continue
+
+    print(experiments_with(problem))
     
-    if problem.dimension > 500: continue
-
-    distance_matrix = get_distance_matrix(problem)
-
-    print('OK ', instance)
-    print(distance_matrix[0][:5])
-
-
 # %%
